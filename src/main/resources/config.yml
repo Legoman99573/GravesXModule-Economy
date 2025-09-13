@@ -1,0 +1,60 @@
+enabled: true
+
+economy:
+  currency-symbol: "$"
+  round-to-decimals: 2
+
+# Charge types (TELEPORT, OPEN, AUTOLOOT, BLOCK_BREAK)
+types:
+  TELEPORT:
+    enabled: true
+    require-permission: true
+    permission: "graves.economy.teleport"
+    overrides:
+      from-permission: true
+      pattern: "graves\\.economy\\.teleport\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)"
+    charge:
+      mode: FIXED            # FIXED or PERCENT_BALANCE
+      fixed: 50.0
+      percent: 1.0
+
+  OPEN:
+    enabled: true
+    require-permission: true
+    permission: "graves.economy.open"
+    overrides:
+      from-permission: true
+      pattern: "graves\\.economy\\.open\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)"
+    charge:
+      mode: FIXED
+      fixed: 25.0
+      percent: 0.5
+
+  AUTOLOOT:
+    enabled: true
+    require-permission: true
+    permission: "graves.economy.autoloot"
+    overrides:
+      from-permission: true
+      pattern: "graves\\.economy\\.autoloot\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)"
+    charge:
+      mode: FIXED
+      fixed: 35.0
+      percent: 0.75
+
+  BLOCK_BREAK:
+    enabled: true
+    require-permission: true
+    permission: "graves.economy.block_break"
+    overrides:
+      from-permission: true
+      pattern: "graves\\.economy\\.block_break\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)"
+    charge:
+      mode: FIXED
+      fixed: 100.0
+      percent: 2.0
+
+messages:
+  charged: "&cCharged %currency%%amount% for %type%."
+  insufficient: "&cYou need %currency%%amount% to %type%."
+  no-vault: "&cVault economy is not available."

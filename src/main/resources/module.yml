@@ -1,0 +1,23 @@
+name: Economy-Vault
+main: dev.cwhead.GravesX.modules.economy.VaultEconomyModule
+version: 1.0.0
+
+pluginDepends:
+  - Vault
+
+authors:
+  - Legoman99573
+
+permissions:
+  graves.economy.reload:
+    description: "Reload the Economy-Vault module config."
+    default: OP
+
+commands:
+  graveecon:
+    description: "Reload the Economy-Vault module config."
+    usage: "/graveecon reload"
+    permission: "graves.economy.reload"
+    aliases: ["gravesxecon", "gecon"]
+    executor: dev.cwhead.GravesX.modules.economy.command.EconReloadCommand
+    tab-completer: dev.cwhead.GravesX.modules.economy.command.EconReloadTab
