@@ -16,8 +16,8 @@
 
     <repositories>
         <repository>
-            <id>cwhead repo</id>
-            <url>https://repo.cwhead.dev/repository/maven-releases/</url>
+            <id>cwhead-repo</id>
+            <url>https://repo.cwhead.dev/repository/maven-public/</url>
         </repository>
         <repository>
             <id>papermc</id>

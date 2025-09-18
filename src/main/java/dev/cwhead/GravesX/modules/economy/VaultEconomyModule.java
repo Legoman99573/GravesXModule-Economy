@@ -17,7 +17,7 @@ import org.bukkit.plugin.ServicePriority;
  * service registration if none is present yet.
  * </p>
  */
-public final class VaultEconomyModule implements GravesXModule {
+public final class VaultEconomyModule extends GravesXModule {
 
     /** Module context provided by the framework lifecycle. */
     private ModuleContext ctx;
@@ -62,7 +62,7 @@ public final class VaultEconomyModule implements GravesXModule {
 
         if (!ctx.getConfig().getBoolean("enabled", true)) {
             ctx.getLogger().info("[Economy-Vault] Module disabled via config.");
-            return;
+            ctx.getGravesXModules().disableModule();
         }
 
         this.runtime = new EconomyRuntime(new ChargeConfig(ctx.getConfig()));
@@ -122,8 +122,8 @@ public final class VaultEconomyModule implements GravesXModule {
      */
     private void onEconomyAvailable() {
         if (this.economy == null && tryHookEconomy()) {
-            ctx.getLogger().severe("[Economy-Vault] Vault Economy provider still not available.");
-            return;
+            ctx.getLogger().severe("[Economy-Vault] Vault Economy provider still not available. Disabling...");
+            ctx.getGravesXModules().disableModule();
         }
         Graves plugin = ctx.getPlugin();
         this.chargeListener = ctx.registerListener(new VaultEconomyListener(plugin, economy, runtime));

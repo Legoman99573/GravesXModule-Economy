@@ -1,6 +1,7 @@
 name: Economy-Vault
 main: dev.cwhead.GravesX.modules.economy.VaultEconomyModule
 version: 1.0.0
+description: Vault based economy for GravesX
 
 pluginDepends:
   - Vault
