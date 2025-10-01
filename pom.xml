@@ -48,5 +48,11 @@
             <version>1.7.1</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.Anon8281</groupId>
+            <artifactId>UniversalScheduler</artifactId>
+            <version>0.1.7</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
