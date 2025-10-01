@@ -2,6 +2,7 @@ package dev.cwhead.GravesX.modules.economy;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -123,7 +124,7 @@ public final class ChargeConfig {
             String rx = cfg.getString(path(t, "overrides.pattern"),
                     "graves\\." + "economy\\." + key(t) + "\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)");
             Pattern pat = Pattern.compile(rx, Pattern.CASE_INSENSITIVE);
-            for (org.bukkit.permissions.PermissionAttachmentInfo pai : p.getEffectivePermissions()) {
+            for (PermissionAttachmentInfo pai : p.getEffectivePermissions()) {
                 if (!pai.getValue()) continue;
                 Matcher m = pat.matcher(pai.getPermission());
                 if (m.matches()) {

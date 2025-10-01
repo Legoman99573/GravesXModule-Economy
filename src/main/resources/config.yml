@@ -14,7 +14,7 @@ types:
       from-permission: true
       pattern: "graves\\.economy\\.teleport\\.cost\\.(?<amount>\\d+(?:\\.\\d{1,2})?)"
     charge:
-      mode: FIXED            # FIXED or PERCENT_BALANCE
+      mode: FIXED
       fixed: 50.0
       percent: 1.0
 
