@@ -1,162 +1,172 @@
 package dev.cwhead.GravesX.modules.economy;
 
 import com.ranull.graves.Graves;
-import com.ranull.graves.integration.MiniMessage;
 import dev.cwhead.GravesX.event.GraveAutoLootEvent;
 import dev.cwhead.GravesX.event.GraveBreakEvent;
 import dev.cwhead.GravesX.event.GraveOpenEvent;
 import dev.cwhead.GravesX.event.GravePreTeleportEvent;
+import dev.cwhead.GravesX.modules.economy.util.I18n;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.OptionalDouble;
 
 /**
- * Listener that applies Vault charges to GravesX actions and cancels the action
- * when the player cannot pay according to {@link ChargeConfig}.
+ * Listener to charge players for GravesX actions using Vault and I18n messages.
  */
-final class VaultEconomyListener implements Listener {
+public final class VaultEconomyListener implements Listener {
 
-    /** GravesX plugin instance for context. */
     private final Graves plugin;
-
-    /** Active Vault economy provider. */
     private final Economy economy;
-
-    /** Runtime access to current charging configuration. */
     private final EconomyRuntime runtime;
+    private final I18n i18n;
 
-    /**
-     * Creates a new listener bound to a Vault economy and the runtime config.
-     *
-     * @param plugin  Graves plugin
-     * @param economy Vault economy provider
-     * @param runtime supplier for current {@link ChargeConfig}
-     */
-    VaultEconomyListener(Graves plugin, Economy economy, EconomyRuntime runtime) {
+    public VaultEconomyListener(Graves plugin, Economy economy, EconomyRuntime runtime, I18n i18n) {
         this.plugin = plugin;
         this.economy = economy;
         this.runtime = runtime;
+        this.i18n = i18n;
     }
 
-    /**
-     * Charges for teleporting to a grave.
-     *
-     * @param e pre-teleport event
-     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPreTeleport(GravePreTeleportEvent e) {
-        Player p = e.isPlayer() ? e.getPlayer() : null;
+    public void onGravePreTeleport(GravePreTeleportEvent e) {
+        if (!e.isPlayer()) {
+            plugin.debugMessage("Player not found on teleport event. Skipping check.", 2);
+            return;
+        }
+        Player p = e.getPlayer();
+
+        if (plugin.hasGrantedPermission("graves.economy.teleport", p)) {
+            plugin.debugMessage(p.getName() + " has the \"graves.economy.teleport\" bypass permission.", 2);
+            return;
+        }
+
+        if (chargeOrCancel(p, ChargeConfig.Type.TELEPORT, "teleport")) {
+            plugin.debugMessage(p.getName() + " had insufficient funds. Cancelling teleportation.", 2);
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onGraveOpen(GraveOpenEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.hasGrantedPermission("graves.economy.open", p)) {
+            plugin.debugMessage(p.getName() + " has the \"graves.economy.open\" bypass permission.", 2);
+            return;
+        }
+        if (chargeOrCancel(p, ChargeConfig.Type.OPEN, "open a grave")) {
+            plugin.debugMessage(p.getName() + " had insufficient funds. Cancelling grave open event.", 2);
+            e.setCancelled(true);
+        };
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onGraveAutoLoot(GraveAutoLootEvent e) {
+        if (!e.isEntityActuallyPlayer()) return;
+        Player p = e.getPlayer();
         if (p == null) return;
-        if (!chargeOrCancel(p, ChargeConfig.Type.TELEPORT, "teleport")) e.setCancelled(true);
+
+        if (plugin.hasGrantedPermission("graves.economy.autoloot", p)) {
+            plugin.debugMessage(p.getName() + " has the \"graves.economy.autoloot\" bypass permission.", 2);
+            return;
+        }
+
+        if (chargeOrCancel(p, ChargeConfig.Type.AUTOLOOT, "auto-loot")) {
+            plugin.debugMessage(p.getName() + " had insufficient funds. Cancelling grave auto loot event.", 2);
+            e.setCancelled(true);
+        }
     }
 
-    /**
-     * Charges for opening a grave.
-     *
-     * @param e open event
-     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onOpen(GraveOpenEvent e) {
+    public void onGraveBlockBreak(GraveBreakEvent e) {
         Player p = e.getPlayer();
-        if (!chargeOrCancel(p, ChargeConfig.Type.OPEN, "open a grave")) e.setCancelled(true);
+
+        if (plugin.hasGrantedPermission("graves.economy.block_break", p)) {
+            plugin.debugMessage(p.getName() + " has the \"graves.economy.block_break\" bypass permission.", 2);
+            return;
+        }
+
+        if (chargeOrCancel(p, ChargeConfig.Type.BLOCK_BREAK, "break a grave")) {
+            plugin.debugMessage(p.getName() + " had insufficient funds. Cancelling grave block break event.", 2);
+            e.setCancelled(true);
+        }
     }
 
-    /**
-     * Charges for auto-looting a grave.
-     *
-     * @param e auto-loot event
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onAutoLoot(GraveAutoLootEvent e) {
-        Player p = e.getPlayer();
-        if (p == null) return;
-        if (!chargeOrCancel(p, ChargeConfig.Type.AUTOLOOT, "auto-loot")) e.setCancelled(true);
-    }
-
-    /**
-     * Charges for breaking a grave block.
-     *
-     * @param e break event
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(GraveBreakEvent e) {
-        Player p = e.getPlayer();
-        if (!chargeOrCancel(p, ChargeConfig.Type.BLOCK_BREAK, "break a grave")) e.setCancelled(true);
-    }
-
-    /**
-     * Computes the cost for an action and attempts to withdraw it.
-     * Cancels the action (returns {@code false}) if disabled, exempt, or insufficient funds.
-     *
-     * @param p           player being charged
-     * @param type        charge type
-     * @param humanAction human-readable action for messages
-     * @return {@code true} if action may proceed; {@code false} to cancel
-     */
-    private boolean chargeOrCancel(Player p, ChargeConfig.Type type, String humanAction) {
+    private boolean chargeOrCancel(Player p, ChargeConfig.Type type, String actionWord) {
         ChargeConfig cfg = runtime.get();
 
-        if (!cfg.isTypeEnabled(type)) {
-            return true;
-        }
-
-        if (cfg.requirePermission(type) && !p.hasPermission(cfg.permissionNode(type))) {
-            return true;
-        }
+        if (!cfg.isTypeEnabled(type)) return false;
 
         double balance = economy.getBalance(p);
-        double cost = round(cfg.computeCost(type, p, balance), cfg.rounding());
+        double baseCost = cfg.computeCost(type, p, balance);
 
-        if (cost <= 0.0) {
-            return false;
-        }
+        if (baseCost <= 0.0) return false;
+
+        OptionalDouble overrideOpt = getChargeOverride(p, type);
+        double cost = overrideOpt.orElse(baseCost);
+
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("currency", cfg.currency());
+        placeholders.put("amount", cfg.fmt(cost));
+        placeholders.put("type", actionWord);
 
         if (balance < cost) {
-            sendMsg(p, cfg.msgInsufficient(cost, humanAction));
-            return false;
+            sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".insufficient", placeholders);
+            return true;
         }
 
         EconomyResponse r = economy.withdrawPlayer(p, cost);
         if (r == null || !r.transactionSuccess()) {
-            sendMsg(p, cfg.msgInsufficient(cost, humanAction));
-            return false;
+            sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".insufficient", placeholders);
+            return true;
         }
 
-        sendMsg(p, cfg.msgCharged(cost, humanAction));
-        return true;
+        sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".charged", placeholders);
+        return false;
     }
 
-    /**
-     * Sends a colorized message to the player if non-empty.
-     *
-     * @param p   player
-     * @param msg message with '&' color codes
-     */
-    private void sendMsg(Player p, String msg) {
-        if (msg == null || msg.isEmpty()) return;
-        if (plugin.getIntegrationManager().hasMiniMessage()) {
-            p.sendMessage(MiniMessage.convertLegacyToMiniMessage(msg));
-        } else {
-            p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+    private void sendMsg(Player p, String key, Map<String,String> placeholders) {
+        String locale = p.getLocale().toLowerCase();
+        String msg = i18n.translate(key, placeholders, locale);
+        if (msg != null && !msg.isEmpty()) {
+            p.sendMessage(msg);
         }
     }
 
-    /**
-     * Rounds a value to the given decimal places using HALF_UP.
-     *
-     * @param v      value
-     * @param places number of decimal places; negative returns the original value
-     * @return rounded value
-     */
-    private static double round(double v, int places) {
-        if (places < 0) return v;
-        return new BigDecimal(v).setScale(places, RoundingMode.HALF_UP).doubleValue();
+    private OptionalDouble getChargeOverride(Player p, ChargeConfig.Type type) {
+        final String PREFIX = "graves.economy.chargebypass.";
+        final String typePrefix = PREFIX + type.name().toLowerCase() + ".";
+        final double MIN_COST = 0.0;
+        final double MAX_COST = 1_000_000.0;
+
+        double best = Double.POSITIVE_INFINITY;
+
+        for (PermissionAttachmentInfo permInfo : p.getEffectivePermissions()) {
+            String perm = permInfo.getPermission();
+            if (!perm.toLowerCase(Locale.ROOT).startsWith(typePrefix)) continue;
+
+            String suffix = perm.substring(typePrefix.length());
+            if (suffix.isEmpty()) continue;
+
+            try {
+                double parsed = Double.parseDouble(suffix);
+                if (parsed < MIN_COST) parsed = MIN_COST;
+                if (parsed > MAX_COST) parsed = MAX_COST;
+                if (parsed < best) best = parsed;
+            } catch (NumberFormatException ignored) {
+                // ignore malformed permissions
+            }
+        }
+
+        return best == Double.POSITIVE_INFINITY ? OptionalDouble.empty() : OptionalDouble.of(best);
     }
+
 }

@@ -1,0 +1,15 @@
+graves:
+  economy:
+    teleport:
+      charged: "Charged {currency}{amount} for teleporting."
+      insufficient: "You need {currency}{amount} to teleport."
+    open:
+      charged: "Charged {currency}{amount} for opening a grave."
+      insufficient: "You need {currency}{amount} to open a grave."
+    autoloot:
+      charged: "Charged {currency}{amount} for auto-looting."
+      insufficient: "You need {currency}{amount} to auto-loot."
+    block_break:
+      charged: "Charged {currency}{amount} for breaking a grave."
+      insufficient: "You need {currency}{amount} to break a grave."
+    no_vault: "Vault economy is not available."

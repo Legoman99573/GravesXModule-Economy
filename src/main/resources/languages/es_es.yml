@@ -1,0 +1,15 @@
+graves:
+  economy:
+    teleport:
+      charged: "Se cobraron {currency}{amount} por teletransportarse."
+      insufficient: "Necesitas {currency}{amount} para teletransportarte."
+    open:
+      charged: "Se cobraron {currency}{amount} por abrir una tumba."
+      insufficient: "Necesitas {currency}{amount} para abrir una tumba."
+    autoloot:
+      charged: "Se cobraron {currency}{amount} por saquear automáticamente."
+      insufficient: "Necesitas {currency}{amount} para saquear automáticamente."
+    block_break:
+      charged: "Se cobraron {currency}{amount} por romper una tumba."
+      insufficient: "Necesitas {currency}{amount} para romper una tumba."
+    no_vault: "La economía de Vault no está disponible."

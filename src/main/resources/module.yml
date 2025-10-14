@@ -1,6 +1,6 @@
 name: Economy-Vault
 main: dev.cwhead.GravesX.modules.economy.VaultEconomyModule
-version: 1.0.0
+version: 1.1.0
 description: Vault based economy for GravesX
 
 pluginDepends:
@@ -8,11 +8,25 @@ pluginDepends:
 
 authors:
   - Legoman99573
+  - Ranull
+  - JaySmethers
 
 permissions:
   graves.economy.reload:
     description: "Reload the Economy-Vault module config."
     default: OP
+  graves.economy.teleport:
+    description: "Economy Bypass for teleporting."
+    default: false
+  graves.economy.open:
+    description: "Open Bypass permission for opening a grave."
+    default: false
+  graves.economy.autoloot:
+    description: "AutoLoot Bypass permission for autolooting a grave."
+    default: false
+  graves.economy.block_break:
+    description: "Block Break bypass permission for breaking a grave."
+    default: false
 
 commands:
   graveecon:

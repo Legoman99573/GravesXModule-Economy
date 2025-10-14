@@ -6,7 +6,7 @@
 
     <groupId>dev.cwhead.GravesX.modules</groupId>
     <artifactId>EconomyVault</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.ranull</groupId>
             <artifactId>GravesX</artifactId>
-            <version>4.9.9.1-api</version>
+            <version>4.9.9.2-api</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
