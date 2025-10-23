@@ -3,10 +3,11 @@ package dev.cwhead.GravesX.modules.economy;
 import com.ranull.graves.Graves;
 import dev.cwhead.GravesX.module.GravesXModule;
 import dev.cwhead.GravesX.module.ModuleContext;
+import dev.cwhead.GravesX.modules.economy.integration.EconomyPlaceholders;
 import dev.cwhead.GravesX.modules.economy.util.I18n;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 
@@ -21,6 +22,7 @@ public final class VaultEconomyModule extends GravesXModule {
     private VaultEconomyBootstrapListener bootstrapListener;
     private EconomyRuntime runtime;
     private I18n i18n;
+    private EconomyPlaceholders economyPlaceholders;
 
     @Override
     public void onModuleLoad(ModuleContext ctx) {
@@ -40,11 +42,9 @@ public final class VaultEconomyModule extends GravesXModule {
         this.runtime = new EconomyRuntime(new ChargeConfig(ctx.getConfig()));
         ctx.registerService(EconomyRuntime.class, runtime, ServicePriority.Normal);
 
-        // Load I18n with default language
         String defaultLang = ctx.getConfig().getString("default-language", "en_us");
         this.i18n = new I18n(ctx.getPlugin(), defaultLang);
 
-        // Attempt Vault hook
         ctx.runTask(() -> {
             if (tryHookEconomy()) {
                 ctx.getLogger().warning("[Economy-Vault] Vault found but no provider yet, waiting...");
@@ -62,6 +62,7 @@ public final class VaultEconomyModule extends GravesXModule {
         this.economy = null;
         this.runtime = null;
         this.i18n = null;
+        this.economyPlaceholders = null;
     }
 
     private boolean tryHookEconomy() {
@@ -84,5 +85,18 @@ public final class VaultEconomyModule extends GravesXModule {
         Graves plugin = ctx.getPlugin();
         this.listener = ctx.registerListener(new VaultEconomyListener(plugin, economy, runtime, i18n));
         ctx.getLogger().info("[Economy-Vault] Hooked Vault Economy: " + economy.getName());
+        Plugin placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
+
+        if (placeholderAPI != null && placeholderAPI.isEnabled()) {
+            try {
+                this.economyPlaceholders = new EconomyPlaceholders(ctx);
+                economyPlaceholders.register();
+                ctx.getLogger().info("[Economy-Vault] Hooked into " + placeholderAPI.getName() + " v." + placeholderAPI.getDescription().getVersion());
+                ctx.getLogger().info("[Economy-Vault] PlaceholderAPI expansion registered: gravesx_<type>_cost and gravesx_<type>_cost_percentage");
+            } catch (Throwable t) {
+                ctx.getLogger().info("[Economy-Vault] Failed to hook into " + placeholderAPI.getName() + " v." + placeholderAPI.getDescription().getVersion() + ". Placeholders will not work.");
+                ctx.getPlugin().logStackTrace(t);
+            }
+        }
     }
 }

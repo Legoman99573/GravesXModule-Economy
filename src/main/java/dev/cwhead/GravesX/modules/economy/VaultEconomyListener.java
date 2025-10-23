@@ -100,6 +100,10 @@ public final class VaultEconomyListener implements Listener {
         }
     }
 
+    /**
+     * Charge the player for the given action. Returns true when the event should be cancelled
+     * (e.g. insufficient funds or failed charge), false on success / no charge required.
+     */
     private boolean chargeOrCancel(Player p, ChargeConfig.Type type, String actionWord) {
         ChargeConfig cfg = runtime.get();
 
@@ -118,17 +122,46 @@ public final class VaultEconomyListener implements Listener {
         placeholders.put("amount", cfg.fmt(cost));
         placeholders.put("type", actionWord);
 
-        if (balance < cost) {
+        boolean hasEnough = false;
+        try {
+            hasEnough = economy.has(p, cost);
+        } catch (Throwable t) {
+            plugin.debugMessage("economy.has(...) threw: " + t.getMessage(), 2);
+            hasEnough = (balance >= cost);
+        }
+
+        if (!hasEnough) {
             sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".insufficient", placeholders);
+            plugin.debugMessage("Player " + p.getName() + " insufficient funds: balance=" + balance + " cost=" + cost, 2);
             return true;
         }
 
-        EconomyResponse r = economy.withdrawPlayer(p, cost);
+        EconomyResponse r = null;
+        try {
+            r = economy.withdrawPlayer(p, cost);
+        } catch (NoSuchMethodError | NoClassDefFoundError | UnsupportedOperationException ex) {
+            plugin.debugMessage("withdrawPlayer(Player,double) unavailable or failed: " + ex.getMessage(), 2);
+        } catch (Throwable t) {
+            plugin.debugMessage("withdrawPlayer(Player,double) threw: " + t.getMessage(), 2);
+        }
+
         if (r == null || !r.transactionSuccess()) {
+            plugin.debugMessage("Primary withdraw attempt failed or returned null for " + p.getName() + ". Trying name-based withdraw...", 2);
+            try {
+                r = economy.withdrawPlayer(p.getName(), cost);
+            } catch (Throwable t) {
+                plugin.debugMessage("withdrawPlayer(String,double) also threw: " + t.getMessage(), 2);
+                r = null;
+            }
+        }
+
+        if (r == null || !r.transactionSuccess()) {
+            plugin.debugMessage("Charging failed for " + p.getName() + ". Response=" + (r == null ? "null" : r.errorMessage), 2);
             sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".insufficient", placeholders);
             return true;
         }
 
+        plugin.debugMessage("Charged " + p.getName() + " " + cost + " (" + cfg.currency() + ") for " + type.name(), 2);
         sendMsg(p, "graves.economy." + type.name().toLowerCase() + ".charged", placeholders);
         return false;
     }
