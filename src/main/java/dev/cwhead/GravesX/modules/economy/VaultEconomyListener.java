@@ -56,7 +56,7 @@ public final class VaultEconomyListener implements Listener {
 
         int blocks = getTeleportBlocks(p, e.getGrave());
 
-        if (!hasEnoughBalanceFor(p, ChargeConfig.Type.TELEPORT, blocks)) {
+        if (!hasEnoughBalanceFor(p, blocks)) {
             plugin.debugMessage(p.getName() + " has insufficient funds (pre-check). Cancelling teleportation.", 2);
             e.setCancelled(true);
         }
@@ -66,7 +66,7 @@ public final class VaultEconomyListener implements Listener {
      * Actual charge (withdraw) happens on the real teleport event.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onGraveTeleport(GraveTeleportEvent e) {
+    public void onGraveTeleport(GravePostTeleportEvent e) {
         Player p = e.getPlayer();
         if (p == null) return;
 
@@ -228,7 +228,7 @@ public final class VaultEconomyListener implements Listener {
      * Balance-only affordability check (NO withdraw, NO economy.has()).
      * Uses the same pricing + override + teleport-per-block rules as chargeOrCancel.
      */
-    private boolean hasEnoughBalanceFor(Player p, ChargeConfig.Type type, int blocks) {
+    private boolean hasEnoughBalanceFor(Player p, int blocks) {
         ChargeConfig cfg = runtime.get();
 
         if (economy == null) {
@@ -236,7 +236,7 @@ public final class VaultEconomyListener implements Listener {
             return false;
         }
 
-        if (!cfg.isTypeEnabled(type)) return true;
+        if (!cfg.isTypeEnabled(ChargeConfig.Type.TELEPORT)) return true;
 
         final double balance;
         try {
@@ -246,14 +246,14 @@ public final class VaultEconomyListener implements Listener {
             return true;
         }
 
-        double baseCost = cfg.computeCost(type, p, balance);
+        double baseCost = cfg.computeCost(ChargeConfig.Type.TELEPORT, p, balance);
         if (baseCost <= 0.0) return true;
 
-        OptionalDouble overrideOpt = getChargeOverride(p, type);
+        OptionalDouble overrideOpt = getChargeOverride(p, ChargeConfig.Type.TELEPORT);
         double cost = overrideOpt.orElse(baseCost);
 
         // TELEPORT + FIXED => per-block
-        cost = applyTeleportPerBlockIfNeeded(cfg, type, cost, blocks);
+        cost = applyTeleportPerBlockIfNeeded(cfg, ChargeConfig.Type.TELEPORT, cost, blocks);
 
         return balance >= cost;
     }
@@ -316,7 +316,7 @@ public final class VaultEconomyListener implements Listener {
     }
 
     private void sendMsg(Player p, String key, Map<String, String> placeholders) {
-        String locale = p.locale().toLanguageTag();
+        String locale = p.getLocale();
         locale = locale.toLowerCase(Locale.ROOT).replace('-', '_');
 
         String msg = i18n.translate(key, placeholders, locale);
