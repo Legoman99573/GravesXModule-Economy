@@ -36,9 +36,22 @@ public final class ChargeConfig {
         return cfg.getString("economy.currency-symbol", "$");
     }
 
+    /** Returns the charge mode for a given type */
+    public Mode getMode(Type t) {
+        return Mode.valueOf(cfg.getString(path(t, "charge.mode"), "FIXED").toUpperCase(Locale.ROOT));
+    }
+
+    /**
+     * Whether the TELEPORT charge should be multiplied by the distance in blocks.
+     * Defaults to {@code false} (flat fee). Enable via {@code types.TELEPORT.charge.per-block: true}.
+     */
+    public boolean isTeleportPerBlock() {
+        return cfg.getBoolean(path(Type.TELEPORT, "charge.per-block"), false);
+    }
+
     /** Compute the cost for a given player and type */
     public double computeCost(Type t, Player p, double balance) {
-        Mode mode = Mode.valueOf(cfg.getString(path(t, "charge.mode"), "FIXED").toUpperCase(Locale.ROOT));
+        Mode mode = getMode(t);
         return switch (mode) {
             case FIXED -> Math.max(0.0, cfg.getDouble(path(t, "charge.fixed"), 0.0));
             case PERCENT_BALANCE -> {

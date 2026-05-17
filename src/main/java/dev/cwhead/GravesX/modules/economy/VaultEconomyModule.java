@@ -7,6 +7,7 @@ import dev.cwhead.GravesX.modules.economy.integration.EconomyPlaceholders;
 import dev.cwhead.GravesX.modules.economy.util.I18n;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
@@ -42,8 +43,18 @@ public final class VaultEconomyModule extends GravesXModule {
         this.runtime = new EconomyRuntime(new ChargeConfig(ctx.getConfig()));
         ctx.registerService(EconomyRuntime.class, runtime, ServicePriority.Normal);
 
+
+        // Extract bundled language files from the module jar to the module data
+        // folder (ctx.getDataFolder()) if they don't exist yet.  Must happen before
+        // I18n is constructed so loadLanguages() actually finds the files on disk.
+        ctx.saveResource("languages/en_us.yml", false);
+        ctx.saveResource("languages/es_es.yml", false);
+
         String defaultLang = ctx.getConfig().getString("default-language", "en_us");
-        this.i18n = new I18n(ctx.getPlugin(), defaultLang);
+        // Pass ctx.getDataFolder() — the module's own folder — NOT ctx.getPlugin().getDataFolder()
+        // which would point to the host Graves plugin folder and miss the module files.
+        this.i18n = new I18n(ctx.getDataFolder(), defaultLang);
+        ctx.registerService(I18n.class, i18n, ServicePriority.Normal);
 
         ctx.runTask(() -> {
             if (tryHookEconomy()) {
@@ -77,6 +88,15 @@ public final class VaultEconomyModule extends GravesXModule {
     }
 
     private void onEconomyAvailable() {
+        // Unregister bootstrap listener immediately — it must only fire once.
+        if (this.bootstrapListener != null) {
+            HandlerList.unregisterAll(this.bootstrapListener);
+            this.bootstrapListener = null;
+        }
+
+        // Guard against being called again after the listener is already set up.
+        if (this.listener != null) return;
+
         if (this.economy == null && tryHookEconomy()) {
             ctx.getLogger().severe("[Economy-Vault] Vault provider still missing. Disabling module.");
             ctx.getGravesXModules().disableModule();

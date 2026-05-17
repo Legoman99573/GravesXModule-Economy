@@ -3,13 +3,17 @@ graves:
     teleport:
       charged: "Charged {currency}{amount} for teleporting."
       insufficient: "You need {currency}{amount} to teleport."
+      failed: "Failed to charge for teleporting. Please contact an admin."
     open:
       charged: "Charged {currency}{amount} for opening a grave."
       insufficient: "You need {currency}{amount} to open a grave."
+      failed: "Failed to charge for opening a grave. Please contact an admin."
     autoloot:
       charged: "Charged {currency}{amount} for auto-looting."
       insufficient: "You need {currency}{amount} to auto-loot."
+      failed: "Failed to charge for auto-looting. Please contact an admin."
     block_break:
       charged: "Charged {currency}{amount} for breaking a grave."
       insufficient: "You need {currency}{amount} to break a grave."
+      failed: "Failed to charge for breaking a grave. Please contact an admin."
     no_vault: "Vault economy is not available."

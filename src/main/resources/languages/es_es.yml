@@ -3,13 +3,17 @@ graves:
     teleport:
       charged: "Se cobraron {currency}{amount} por teletransportarse."
       insufficient: "Necesitas {currency}{amount} para teletransportarte."
+      failed: "Error al cobrar por teletransportarse. Contacta a un administrador."
     open:
       charged: "Se cobraron {currency}{amount} por abrir una tumba."
       insufficient: "Necesitas {currency}{amount} para abrir una tumba."
+      failed: "Error al cobrar por abrir una tumba. Contacta a un administrador."
     autoloot:
       charged: "Se cobraron {currency}{amount} por saquear automáticamente."
       insufficient: "Necesitas {currency}{amount} para saquear automáticamente."
+      failed: "Error al cobrar por saquear automáticamente. Contacta a un administrador."
     block_break:
       charged: "Se cobraron {currency}{amount} por romper una tumba."
       insufficient: "Necesitas {currency}{amount} para romper una tumba."
+      failed: "Error al cobrar por romper una tumba. Contacta a un administrador."
     no_vault: "La economía de Vault no está disponible."

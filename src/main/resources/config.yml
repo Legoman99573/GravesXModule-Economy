@@ -27,6 +27,9 @@ types:
       fixed: 50.0
       # Percent Balance Cost (Calculates from fixed balance cost)
       percent: 1.0
+      # If true, multiply the fixed/percent cost by the distance in blocks to the grave.
+      # Default false = flat fee regardless of distance.
+      per-block: false
 
   OPEN:
     enabled: true

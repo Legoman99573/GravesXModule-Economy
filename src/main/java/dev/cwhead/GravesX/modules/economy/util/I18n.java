@@ -3,7 +3,6 @@ package dev.cwhead.GravesX.modules.economy.util;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.HashMap;
@@ -15,18 +14,23 @@ import java.util.Map;
  */
 public final class I18n {
 
-    private final JavaPlugin plugin;
+    private final File dataFolder;
     private final String defaultLanguage;
     private final Map<String, Map<String, String>> translations = new HashMap<>();
 
-    public I18n(JavaPlugin plugin, String defaultLanguage) {
-        this.plugin = plugin;
+    /**
+     * @param dataFolder     the module's own data folder (ctx.getDataFolder()),
+     *                       NOT the host plugin's data folder
+     * @param defaultLanguage locale key, e.g. "en_us"
+     */
+    public I18n(File dataFolder, String defaultLanguage) {
+        this.dataFolder = dataFolder;
         this.defaultLanguage = (defaultLanguage == null ? "en_us" : defaultLanguage).toLowerCase();
         loadLanguages();
     }
 
     public void loadLanguages() {
-        File langFolder = new File(plugin.getDataFolder(), "languages");
+        File langFolder = new File(dataFolder, "languages");
         if (!langFolder.exists()) langFolder.mkdirs();
 
         File[] files = langFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -90,10 +94,8 @@ public final class I18n {
         return map.get(key);
     }
 
-    public void saveDefaultLanguage(String locale, String resource) {
-        File langFile = new File(plugin.getDataFolder(), "languages/" + locale + ".yml");
-        if (!langFile.exists()) {
-            plugin.saveResource("languages/" + resource, false);
-        }
+    /** Returns the languages subfolder (so callers can check/save files into it). */
+    public File getLanguagesFolder() {
+        return new File(dataFolder, "languages");
     }
 }

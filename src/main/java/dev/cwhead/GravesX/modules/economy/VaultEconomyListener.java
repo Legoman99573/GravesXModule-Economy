@@ -13,7 +13,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -37,8 +36,9 @@ public final class VaultEconomyListener implements Listener {
     }
 
     /**
-     * Pre-check ONLY: if TELEPORT is FIXED mode, treat the fixed amount as "per block" and
-     * cancel if the player's BALANCE is too low. No withdrawal here.
+     * Charge (and cancel if the player cannot afford it) BEFORE the teleport completes.
+     * Doing this in the pre-event guarantees the player always receives a message and
+     * that the money is taken before — not after — they arrive at the grave.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onGravePreTeleport(GravePreTeleportEvent e) {
@@ -48,27 +48,6 @@ public final class VaultEconomyListener implements Listener {
         }
 
         Player p = e.getPlayer();
-
-        if (plugin.hasGrantedPermission("graves.economy.teleport", p)) {
-            plugin.debugMessage(p.getName() + " has the \"graves.economy.teleport\" bypass permission.", 2);
-            return;
-        }
-
-        int blocks = getTeleportBlocks(p, e.getGrave());
-
-        if (!hasEnoughBalanceFor(p, blocks)) {
-            plugin.debugMessage(p.getName() + " has insufficient funds (pre-check). Cancelling teleportation.", 2);
-            e.setCancelled(true);
-        }
-    }
-
-    /**
-     * Actual charge (withdraw) happens on the real teleport event.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onGraveTeleport(GravePostTeleportEvent e) {
-        Player p = e.getPlayer();
-        if (p == null) return;
 
         if (plugin.hasGrantedPermission("graves.economy.teleport", p)) {
             plugin.debugMessage(p.getName() + " has the \"graves.economy.teleport\" bypass permission.", 2);
@@ -225,78 +204,15 @@ public final class VaultEconomyListener implements Listener {
     }
 
     /**
-     * Balance-only affordability check (NO withdraw, NO economy.has()).
-     * Uses the same pricing + override + teleport-per-block rules as chargeOrCancel.
-     */
-    private boolean hasEnoughBalanceFor(Player p, int blocks) {
-        ChargeConfig cfg = runtime.get();
-
-        if (economy == null) {
-            plugin.debugMessage("Pre-check cancelled: economy provider is null (Vault not hooked?)", 1);
-            return false;
-        }
-
-        if (!cfg.isTypeEnabled(ChargeConfig.Type.TELEPORT)) return true;
-
-        final double balance;
-        try {
-            balance = economy.getBalance(p);
-        } catch (Throwable t) {
-            plugin.debugMessage("economy.getBalance(...) threw: " + t.getMessage(), 2);
-            return true;
-        }
-
-        double baseCost = cfg.computeCost(ChargeConfig.Type.TELEPORT, p, balance);
-        if (baseCost <= 0.0) return true;
-
-        OptionalDouble overrideOpt = getChargeOverride(p, ChargeConfig.Type.TELEPORT);
-        double cost = overrideOpt.orElse(baseCost);
-
-        // TELEPORT + FIXED => per-block
-        cost = applyTeleportPerBlockIfNeeded(cfg, ChargeConfig.Type.TELEPORT, cost, blocks);
-
-        return balance >= cost;
-    }
-
-    /**
-     * TELEPORT special rule:
-     * If config mode is FIXED, treat the fixed amount as "per block" from player -> grave.
-     *
-     * Uses reflection to avoid hard-coding a specific ChargeConfig API shape (getMode/mode/isFixed, etc).
+     * TELEPORT special rule: multiply the cost by distance in blocks when
+     * {@code types.TELEPORT.charge.per-block} is {@code true} in config.
+     * Defaults to a flat fee so players are never surprised by a huge distance charge.
      */
     private double applyTeleportPerBlockIfNeeded(ChargeConfig cfg, ChargeConfig.Type type, double cost, int blocks) {
         if (type != ChargeConfig.Type.TELEPORT) return cost;
-        if (!isFixedMode(cfg, type)) return cost;
+        if (!cfg.isTeleportPerBlock()) return cost;
 
-        int b = Math.max(1, blocks);
-        return cost * b;
-    }
-
-    private boolean isFixedMode(ChargeConfig cfg, ChargeConfig.Type type) {
-        // Try common method names without creating compile-time dependencies on a Mode enum.
-        // Accepts anything whose .toString() equals "FIXED" (case-insensitive).
-        String[] candidates = {"getMode", "mode"};
-        for (String name : candidates) {
-            try {
-                Method m = cfg.getClass().getMethod(name, ChargeConfig.Type.class);
-                Object mode = m.invoke(cfg, type);
-                if (mode != null && "FIXED".equalsIgnoreCase(mode.toString())) return true;
-            } catch (Throwable ignored) {
-            }
-        }
-
-        // Also allow boolean helpers if you have one in ChargeConfig
-        String[] boolCandidates = {"isFixed", "isFixedMode"};
-        for (String name : boolCandidates) {
-            try {
-                Method m = cfg.getClass().getMethod(name, ChargeConfig.Type.class);
-                Object r = m.invoke(cfg, type);
-                if (r instanceof Boolean && (Boolean) r) return true;
-            } catch (Throwable ignored) {
-            }
-        }
-
-        return false;
+        return cost * Math.max(1, blocks);
     }
 
     /**

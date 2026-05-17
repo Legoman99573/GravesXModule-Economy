@@ -4,6 +4,7 @@ import dev.cwhead.GravesX.module.ModuleContext;
 import dev.cwhead.GravesX.module.command.GravesXModuleCommand;
 import dev.cwhead.GravesX.modules.economy.ChargeConfig;
 import dev.cwhead.GravesX.modules.economy.EconomyRuntime;
+import dev.cwhead.GravesX.modules.economy.util.I18n;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -84,10 +85,17 @@ public final class EconReloadCommand implements GravesXModuleCommand {
         EconomyRuntime runtime = Bukkit.getServicesManager().load(EconomyRuntime.class);
         if (runtime != null) {
             runtime.set(fresh);
-            sender.sendMessage(ChatColor.GREEN + "[Economy-Vault] Config reloaded.");
         } else {
             sender.sendMessage(ChatColor.RED + "[Economy-Vault] Runtime not available; is the module enabled?");
+            return true;
         }
+
+        I18n i18n = Bukkit.getServicesManager().load(I18n.class);
+        if (i18n != null) {
+            i18n.loadLanguages();
+        }
+
+        sender.sendMessage(ChatColor.GREEN + "[Economy-Vault] Config reloaded.");
         return true;
     }
 }

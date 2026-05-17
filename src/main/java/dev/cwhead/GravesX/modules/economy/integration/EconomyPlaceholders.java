@@ -23,7 +23,7 @@ public class EconomyPlaceholders extends PlaceholderExpansion{
 
     @Override
     public @NotNull String getIdentifier() {
-        return ctx.getPlugin().getName().toLowerCase(Locale.ROOT);
+        return "gravesx";
     }
 
     @Override
