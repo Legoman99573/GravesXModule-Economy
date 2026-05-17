@@ -43,7 +43,7 @@
         <dependency>
             <groupId>com.ranull</groupId>
             <artifactId>GravesX</artifactId>
-            <version>4.9.10.10</version>
+            <version>4.9.10.10-api</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
