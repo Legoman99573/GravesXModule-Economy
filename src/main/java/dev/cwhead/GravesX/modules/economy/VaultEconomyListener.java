@@ -49,7 +49,7 @@ public final class VaultEconomyListener implements Listener {
 
         Player p = e.getPlayer();
 
-        if (plugin.hasGrantedPermission("graves.economy.teleport", p)) {
+        if (plugin.getPermissionManager().hasGrantedPermission("graves.economy.teleport", p)) {
             plugin.debugMessage(p.getName() + " has the \"graves.economy.teleport\" bypass permission.", 2);
             return;
         }
@@ -66,7 +66,7 @@ public final class VaultEconomyListener implements Listener {
     public void onGraveOpen(GraveOpenEvent e) {
         Player p = e.getPlayer();
 
-        if (plugin.hasGrantedPermission("graves.economy.open", p)) {
+        if (plugin.getPermissionManager().hasGrantedPermission("graves.economy.open", p)) {
             plugin.debugMessage(p.getName() + " has the \"graves.economy.open\" bypass permission.", 2);
             return;
         }
@@ -84,7 +84,7 @@ public final class VaultEconomyListener implements Listener {
         Player p = e.getPlayer();
         if (p == null) return;
 
-        if (plugin.hasGrantedPermission("graves.economy.autoloot", p)) {
+        if (plugin.getPermissionManager().hasGrantedPermission("graves.economy.autoloot", p)) {
             plugin.debugMessage(p.getName() + " has the \"graves.economy.autoloot\" bypass permission.", 2);
             return;
         }
@@ -99,7 +99,7 @@ public final class VaultEconomyListener implements Listener {
     public void onGraveBlockBreak(GraveBreakEvent e) {
         Player p = e.getPlayer();
 
-        if (plugin.hasGrantedPermission("graves.economy.block_break", p)) {
+        if (plugin.getPermissionManager().hasGrantedPermission("graves.economy.block_break", p)) {
             plugin.debugMessage(p.getName() + " has the \"graves.economy.block_break\" bypass permission.", 2);
             return;
         }
