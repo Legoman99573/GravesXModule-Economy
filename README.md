@@ -1,6 +1,6 @@
-# GravesXModule-Economy-Folia
+# GravesXModule-Economy
 
-A [GravesX](https://github.com/Legoman99573/GravesX) module that charges players Vault economy currency for interacting with their graves — fully compatible with **Folia** and **Paper**.
+A [GravesX](https://github.com/Legoman99573/GravesX) module that charges players Vault economy currency for interacting with their graves — fully compatible with **Folia**, **Paper**, and **Spigot**.
 
 ---
 
@@ -20,7 +20,7 @@ A [GravesX](https://github.com/Legoman99573/GravesX) module that charges players
 
 | Dependency | Version | Required |
 |---|---|---|
-| Paper / Folia | 1.21.4+ | ✓ |
+| Paper / Folia / Spigot | 1.21.4+ | ✓ |
 | GravesX | 4.9.10.10+ | ✓ |
 | Vault | any | ✓ |
 | Economy plugin (EssentialsX, CMI, etc.) | any | ✓ |
@@ -201,4 +201,4 @@ Output: `target/EconomyVault-<version>.jar`
 ## Credits
 
 Original module by [Legoman99573](https://github.com/Legoman99573), [Ranull](https://github.com/Ranull), and [JaySmethers](https://github.com/JaySmethers).
-Folia compatibility fork maintained separately.
+Folia compatibility possible by [https://github.com/jayesh-kambli](https://github.com/jayesh-kambli).
