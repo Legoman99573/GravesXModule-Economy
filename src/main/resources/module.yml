@@ -1,4 +1,4 @@
-name: ${project.name}
+name: ${project.artifactId}
 main: dev.cwhead.GravesX.modules.economy.VaultEconomyModule
 version: ${project.version}
 description: Vault based economy for GravesX
